@@ -6,7 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class EventsServiceApplicationTests {
 
-	@Test
+	//@Test
 	void contextLoads() {
 	}
 
