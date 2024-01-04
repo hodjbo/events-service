@@ -1,5 +1,6 @@
 package com.hodbenor.project.eventsservice.service;
 
+import com.hodbenor.project.eventsservice.dao.EventDao;
 import com.hodbenor.project.eventsservice.dao.EventUserDao;
 import com.hodbenor.project.eventsservice.dao.beans.Event;
 import com.hodbenor.project.eventsservice.dao.beans.EventUser;
@@ -19,16 +20,22 @@ import java.util.PriorityQueue;
 @Service
 public class EventReminderService {
     private static final Logger LOGGER = LoggerFactory.getLogger(EventService.class);
+    private static final int NOTIFY_BEFORE_EVENT_MINUTES = 1;
+    private static final String MAIL_SUBJECT = "%s - Reminder";
+    private static final String MAIL_BODY = "Hi, There are only " + NOTIFY_BEFORE_EVENT_MINUTES + " minutes left before %s starts!";
 
     private final EventUserDao eventUserDao;
     private final UserService userService;
+    private final EmailService emailService;
     private final PriorityQueue<Event> eventQueue;
     private final Thread reminderThread;
 
-    public EventReminderService(EventUserDao eventUserDao, UserService userService) {
+    public EventReminderService(EventUserDao eventUserDao, EventDao eventDao, UserService userService, EmailService emailService) {
         this.eventUserDao = eventUserDao;
         this.userService = userService;
-        eventQueue = new PriorityQueue<>(Comparator.comparing(Event::getDateTime));
+        this.emailService = emailService;
+        this.eventQueue = new PriorityQueue<>(Comparator.comparing(Event::getDateTime));
+        eventQueue.addAll(eventDao.findFutureEvents());
         reminderThread = new Thread(this::handleEvents);
         reminderThread.start();
     }
@@ -101,7 +108,8 @@ public class EventReminderService {
     }
 
     private void notifyUser(User user, Event event) {
-        LOGGER.debug("notifyUser to {} for {}", user, event.getDateTime());
+        LOGGER.info("notify user to {} for {}", user, event.getDateTime());
+        emailService.sendEmail(user.getUsername(), String.format(MAIL_SUBJECT, event.getName()), String.format(MAIL_BODY, event.getName()));
     }
 
 }

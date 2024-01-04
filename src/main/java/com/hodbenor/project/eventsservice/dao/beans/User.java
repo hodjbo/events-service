@@ -13,7 +13,7 @@ public class User implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "ID", nullable = false, unique = true)
-    private Long id;
+    private long id;
 
     @Column(name = "USER_NAME", nullable = false, unique = true)
     private String username;
@@ -21,6 +21,6 @@ public class User implements Serializable {
     @Column(name = "PASSWORD", nullable = false)
     private String password;
 
-    @Column(name = "login_token", nullable = false)
-    private String loginToken;
+    @Column(name = "AUTH_TOKEN", nullable = false)
+    private String authToken;
 }

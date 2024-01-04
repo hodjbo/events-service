@@ -1,29 +1,23 @@
 package com.hodbenor.project.eventsservice.controller;
 
-import com.hodbenor.project.eventsservice.controller.beans.EventUserRequest;
 import com.hodbenor.project.eventsservice.dao.beans.Event;
+import com.hodbenor.project.eventsservice.dao.beans.User;
 import com.hodbenor.project.eventsservice.service.EventService;
-import com.hodbenor.project.eventsservice.service.UserService;
 import jakarta.websocket.server.PathParam;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @RestController
 @RequestMapping("/event")
 public class EventController {
 
     private final EventService eventService;
-    private final UserService userService;
 
-    public EventController(EventService eventService, UserService userService) {
+    public EventController(EventService eventService) {
         this.eventService = eventService;
-        this.userService = userService;
     }
 
     @PostMapping("/create")
@@ -34,14 +28,10 @@ public class EventController {
         return eventId > 0 ? ResponseEntity.ok(event) : ResponseEntity.internalServerError().build();
     }
 
-    @PostMapping("/signup")
-    public ResponseEntity<Boolean> signUp(@RequestBody EventUserRequest eventUserRequest) {
-        AtomicBoolean isSignedToEvent = new AtomicBoolean(false);
-        userService.findUserById(eventUserRequest.getUserId()).ifPresent(user -> {
-            isSignedToEvent.set(eventService.signupToEvent(eventUserRequest.getEventId(), user.getId()));
-        });
+    @PostMapping("/signup/{eventId}")
+    public ResponseEntity<Boolean> signUp(User user, @RequestHeader(name = "Auth-Token") String authToken, @PathVariable long eventId) {
 
-        return isSignedToEvent.get() ? ResponseEntity.ok(isSignedToEvent.get()) : ResponseEntity.internalServerError().build();
+        return  ResponseEntity.ok(eventService.signupToEvent(eventId, user.getId()));
     }
 
     @GetMapping("/{eventId}")
@@ -69,28 +59,23 @@ public class EventController {
         return ResponseEntity.ok(eventService.getAllEvents());
     }
 
-    @GetMapping("/scheduled-events/date")
-    public ResponseEntity<List<Event>> getScheduledEvents(
-            @RequestParam("fromDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
-            @RequestParam("toDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate) {
-
-        return ResponseEntity.ok(eventService.getAllEvents(fromDate, toDate));
-    }
-
     @GetMapping("/scheduled-events/venue/{venue}")
-    public ResponseEntity<List<Event>> getEventsByVenue(@PathVariable("venue") String venue) {
+    public ResponseEntity<List<Event>> getEventsByVenue(User user, @RequestHeader(name = "Auth-Token") String authToken,
+                                                        @PathVariable("venue") String venue) {
 
         return ResponseEntity.ok(eventService.getEventsByVenue(venue));
     }
 
     @GetMapping("/scheduled-events/location/{location}")
-    public ResponseEntity<List<Event>> getEventsByLocation(@PathVariable("location") String location) {
+    public ResponseEntity<List<Event>> getEventsByLocation(User user, @RequestHeader(name = "Auth-Token") String authToken,
+                                                           @PathVariable("location") String location) {
 
         return ResponseEntity.ok(eventService.getEventsByLocation(location));
     }
 
-    @GetMapping("/scheduled-events/{sorted}")
-    public ResponseEntity<List<Event>> getEventsSortedByDate(@PathParam("sorted") String orderBy) {
+    @GetMapping("/scheduled-events/sorted")
+    public ResponseEntity<List<Event>> getEventsSortedByDate(User user, @RequestHeader(name = "Auth-Token") String authToken,
+                                                             @PathParam("orderBy") String orderBy) {
 
         return ResponseEntity.ok(eventService.getSortedEvents(orderBy));
     }

@@ -22,26 +22,48 @@ public class UserService {
     }
 
     public Optional<User> signUp(String username, String password) {
+        if (findUser(username).isPresent()) {
+            LOGGER.error("Failed to insert new user: {} -> user already exist", username);
+
+            return Optional.empty();
+        }
         try {
             User user = new User();
             user.setUsername(username);
             user.setPassword(password);
-            user.setLoginToken(tokenService.generateToken());
+            user.setAuthToken(tokenService.generateToken());
 
             if (userDao.insertUser(user) > 0) {
                 return Optional.of(user);
             }
         } catch (Exception e) {
             LOGGER.error("Failed to insert new user: {}", username, e);
-
         }
+
         return Optional.empty();
     }
 
-    public Optional<User> findUser(String username, String password) {
+    public String login(String username, String password) {
+        return userDao.findUser(username, password)
+                .map(user -> {
+                    String authToken = tokenService.generateToken();
+                    user.setAuthToken(authToken);
+                    try {
+                        userDao.updateToken(user);
+                    return authToken;
+                    } catch (Exception e) {
+                        LOGGER.error("Failed to update token for user {}", user, e);
+
+                        return null;
+                    }
+
+                }).orElse(null);
+    }
+
+    public Optional<User> findUser(String username) {
         try {
 
-            return userDao.findUser(username, password);
+            return userDao.findUser(username);
         } catch (Exception e) {
             LOGGER.error("Failed to findUser user: {}", username, e);
 

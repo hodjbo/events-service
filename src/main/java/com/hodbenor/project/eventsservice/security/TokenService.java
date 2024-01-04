@@ -14,11 +14,12 @@ import java.util.Base64;
 
 @Service
 public class TokenService {
-    public String generateToken() {
 
+    public String generateToken() {
         long expirationDate = LocalDateTime.now().plusMinutes(10).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         byte[] randomBytes = new byte[4];
         new SecureRandom().nextBytes(randomBytes);
+
         return Base64.getUrlEncoder().encodeToString(randomBytes) + "|" + expirationDate;
     }
 

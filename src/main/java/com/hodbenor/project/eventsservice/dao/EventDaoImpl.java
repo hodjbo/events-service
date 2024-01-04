@@ -23,7 +23,6 @@ public class EventDaoImpl implements EventDao {
     private final SessionFactory sessionFactory;
 
     public EventDaoImpl() {
-
         Configuration configuration = new Configuration();
         configuration.configure("hibernate.cfg.xml");
         configuration.addAnnotatedClass(Event.class);
@@ -43,7 +42,6 @@ public class EventDaoImpl implements EventDao {
 
     @Override
     public List<Event> findAllEvents() {
-
         Session session = sessionFactory.openSession();
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<Event> criteriaQuery = criteriaBuilder.createQuery(Event.class);
@@ -53,17 +51,17 @@ public class EventDaoImpl implements EventDao {
 
         return query.getResultList();
     }
+
     @Override
-    public List<Event> findAllEvents(LocalDateTime fromDate, LocalDateTime toDate) {
+    public List<Event> findFutureEvents() {
         Session session = sessionFactory.openSession();
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<Event> criteriaQuery = criteriaBuilder.createQuery(Event.class);
         Root<Event> root = criteriaQuery.from(Event.class);
         criteriaQuery.select(root)
-                .where(criteriaBuilder.and(criteriaBuilder.greaterThan(root.get("dateTime"), fromDate),
-                        criteriaBuilder.lessThan(root.get("dateTime"), toDate)));
-
+                .where(criteriaBuilder.and(criteriaBuilder.greaterThan(root.get("dateTime"), LocalDateTime.now())));
         Query<Event> query = session.createQuery(criteriaQuery);
+
         return query.getResultList();
     }
 
@@ -80,7 +78,6 @@ public class EventDaoImpl implements EventDao {
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<Event> criteriaQuery = criteriaBuilder.createQuery(Event.class);
         Root<Event> root = criteriaQuery.from(Event.class);
-
         criteriaQuery.select(root)
                 .where(criteriaBuilder.equal(root.get("venue"), venue));
 
@@ -94,7 +91,6 @@ public class EventDaoImpl implements EventDao {
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<Event> criteriaQuery = criteriaBuilder.createQuery(Event.class);
         Root<Event> root = criteriaQuery.from(Event.class);
-
         criteriaQuery.select(root)
                 .where(criteriaBuilder.equal(root.get("location"), location));
 
@@ -108,7 +104,6 @@ public class EventDaoImpl implements EventDao {
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<Event> criteriaQuery = criteriaBuilder.createQuery(Event.class);
         Root<Event> root = criteriaQuery.from(Event.class);
-
         criteriaQuery.select(root).orderBy(criteriaBuilder.asc(root.get(orderBy)));
         Query<Event> query = session.createQuery(criteriaQuery);
 
@@ -137,7 +132,6 @@ public class EventDaoImpl implements EventDao {
     @Override
     public Optional<Event> removeEvent(long eventId) {
         Optional<Event> optionalEvent = findById(eventId);
-
         optionalEvent.ifPresent(event -> {
             Session session = sessionFactory.openSession();
             Transaction transaction = session.beginTransaction();

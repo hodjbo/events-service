@@ -28,6 +28,12 @@ public class Event implements Serializable {
     @Column(name = "MAX_PARTICIPANTS", nullable = false)
     private int maxParticipants;
 
+    public int incNumParticipants() {
+        numParticipants +=1;
+
+        return numParticipants;
+    }
+
     @Column(name = "NUM_PARTICIPANTS")
     private int numParticipants;
 
@@ -39,4 +45,6 @@ public class Event implements Serializable {
 
     @Column(name = "LOCATION", length = 40, nullable = false)
     private String location;
+
+
 }

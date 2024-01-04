@@ -3,6 +3,7 @@ package com.hodbenor.project.eventsservice.dao;
 import com.hodbenor.project.eventsservice.dao.beans.User;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.query.Query;
@@ -20,7 +21,6 @@ public class UserDaoImpl implements UserDao {
     private final SessionFactory sessionFactory;
 
     public UserDaoImpl() {
-
         Configuration configuration = new Configuration();
         configuration.configure("hibernate.cfg.xml");
         configuration.addAnnotatedClass(User.class);
@@ -51,9 +51,20 @@ public class UserDaoImpl implements UserDao {
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<User> criteriaQuery = criteriaBuilder.createQuery(User.class);
         Root<User> root = criteriaQuery.from(User.class);
+        criteriaQuery.select(root).where(criteriaBuilder.equal(root.get("authToken"), loginToken));
+        Query<User> query = session.createQuery(criteriaQuery);
 
-        criteriaQuery.select(root).where(criteriaBuilder.equal(root.get("loginToken"), loginToken));
+        return Optional.ofNullable(query.uniqueResult());
+    }
 
+    @Override
+    public Optional<User> findUser(String username) {
+        Session session = sessionFactory.openSession();
+        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+        CriteriaQuery<User> criteriaQuery = criteriaBuilder.createQuery(User.class);
+        Root<User> root = criteriaQuery.from(User.class);
+        criteriaQuery.select(root)
+                .where(criteriaBuilder.and(criteriaBuilder.equal(root.get("username"), username)));
         Query<User> query = session.createQuery(criteriaQuery);
 
         return Optional.ofNullable(query.uniqueResult());
@@ -65,13 +76,29 @@ public class UserDaoImpl implements UserDao {
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<User> criteriaQuery = criteriaBuilder.createQuery(User.class);
         Root<User> root = criteriaQuery.from(User.class);
-
         criteriaQuery.select(root)
                 .where(criteriaBuilder.and(criteriaBuilder.equal(root.get("username"), username),
                         criteriaBuilder.equal(root.get("password"), password)));
-
         Query<User> query = session.createQuery(criteriaQuery);
 
         return Optional.ofNullable(query.uniqueResult());
+    }
+
+    @Override
+    public void updateToken(User user) {
+        Transaction transaction = null;
+        try {
+            Session session = sessionFactory.openSession();
+            transaction = session.beginTransaction();
+            session.update(user);
+            transaction.commit();
+
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

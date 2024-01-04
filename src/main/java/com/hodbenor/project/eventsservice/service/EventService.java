@@ -45,7 +45,9 @@ public class EventService {
         AtomicBoolean isSignedToEvent = new AtomicBoolean(false);
         try {
             eventDao.findById(eventId).ifPresent(event -> {
-                if (event.getDateTime().isAfter(LocalDateTime.now())) {
+                if (event.getDateTime().isAfter(LocalDateTime.now()) & event.getNumParticipants() < event.getMaxParticipants()) {
+                    event.incNumParticipants();
+                    eventDao.updateEvent(event);
                     eventUserDao.signupToEvent(eventId, userId);
                     isSignedToEvent.set(true);
                 }
@@ -53,16 +55,9 @@ public class EventService {
         } catch (Exception e) {
             LOGGER.error("Failed to signup user {} for event : {}", userId, eventId, e);
             isSignedToEvent.set(false);
-
         }
 
         return isSignedToEvent.get();
-    }
-
-
-    public List<Event> getAllEvents(LocalDateTime fromDate, LocalDateTime toDate) {
-
-        return eventDao.findAllEvents(fromDate, toDate);
     }
 
     public List<Event> getAllEvents() {
