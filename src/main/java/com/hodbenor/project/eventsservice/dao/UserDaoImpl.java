@@ -46,6 +46,20 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
+    public Optional<User> findUserByToken(String loginToken) {
+        Session session = sessionFactory.openSession();
+        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+        CriteriaQuery<User> criteriaQuery = criteriaBuilder.createQuery(User.class);
+        Root<User> root = criteriaQuery.from(User.class);
+
+        criteriaQuery.select(root).where(criteriaBuilder.equal(root.get("loginToken"), loginToken));
+
+        Query<User> query = session.createQuery(criteriaQuery);
+
+        return Optional.ofNullable(query.uniqueResult());
+    }
+
+    @Override
     public Optional<User> findUser(String username, String password) {
         Session session = sessionFactory.openSession();
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();

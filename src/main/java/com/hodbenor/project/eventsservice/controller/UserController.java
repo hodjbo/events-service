@@ -1,28 +1,44 @@
 package com.hodbenor.project.eventsservice.controller;
 
 import com.hodbenor.project.eventsservice.controller.beans.UserRequest;
+import com.hodbenor.project.eventsservice.security.TokenService;
 import com.hodbenor.project.eventsservice.service.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 @RestController
 @RequestMapping("/user")
 public class UserController {
 
     private final UserService userService;
+    private final TokenService tokenService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, TokenService tokenService) {
         this.userService = userService;
+        this.tokenService = tokenService;
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<Long> signUp(@RequestBody UserRequest userRequest) {
-        long userId = userService.signUp(userRequest.getUsername(), userRequest.getPassword());
+    public ResponseEntity<String> signUp(@RequestBody UserRequest userRequest) {
+        AtomicReference<String> loginToken = new AtomicReference<>("");
+        userService.signUp(userRequest.getUsername(), userRequest.getPassword())
+                .ifPresent(user -> {
+                    loginToken.set(user.getLoginToken());
+                });
 
-        return userId > 0 ? ResponseEntity.ok(userId) : ResponseEntity.internalServerError().build();
+        return loginToken.get().length() > 0 ? ResponseEntity.ok(loginToken.get()) : ResponseEntity.internalServerError().build();
+    }
+
+    @GetMapping("/valid")
+    public ResponseEntity<Boolean> valid(@RequestHeader("Authorization") String token) {
+        boolean isValid = false;
+        if (userService.findUserByToken(token).isPresent()) {
+                isValid = tokenService.validToken(token);
+        }
+
+        return isValid ? ResponseEntity.ok(true) : ResponseEntity.internalServerError().build();
     }
 
    /* @PostMapping("/login")

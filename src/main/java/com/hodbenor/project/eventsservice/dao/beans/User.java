@@ -20,4 +20,7 @@ public class User implements Serializable {
 
     @Column(name = "PASSWORD", nullable = false)
     private String password;
+
+    @Column(name = "login_token", nullable = false)
+    private String loginToken;
 }
