@@ -3,12 +3,13 @@ package com.hodbenor.project.eventsservice.dao.beans;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "EVENT")
 @Data
-public class Event {
+public class Event implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -30,11 +31,11 @@ public class Event {
     @Column(name = "NUM_PARTICIPANTS")
     private int numParticipants;
 
-    @Column(name = "DATE", nullable = false)
-    private LocalDateTime date;
+    @Column(name = "EVENT_DATE_TIME", nullable = false)
+    private LocalDateTime dateTime;
 
-    @Column(name = "CREATION_DATE", nullable = false)
-    private LocalDateTime creationDate;
+    @Column(name = "CREATION_DATE_TIME", nullable = false)
+    private LocalDateTime creationDateTime;
 
     @Column(name = "LOCATION", length = 40, nullable = false)
     private String location;

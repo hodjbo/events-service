@@ -7,10 +7,14 @@ import java.util.List;
 import java.util.Optional;
 
 public interface EventDao {
-    void insertEvent(Event event);
-    List<Event> fetchAllScheduledEvents(LocalDateTime fromDate, LocalDateTime toDate);
-    Optional<Event> findById(long event);
-    void updateEvent(Event event);
-    void removeEvent(long eventId);
+    long insertEvent(Event event);
+    List<Event> findAllEvents();
+    List<Event> findAllEvents(LocalDateTime fromDate, LocalDateTime toDate);
+    Optional<Event> findById(long eventId);
+    List<Event> findEventsByVenue(String venue);
+    List<Event> findEventsByLocation(String location);
+    List<Event> findSortedEvents(String orderBy);
+    boolean updateEvent(Event event);
+    Optional<Event> removeEvent(long eventId);
 
 }
